@@ -1,6 +1,16 @@
 const { SHEET_ID, client, sheets } = require("../ConnectDB/googlesheetconnect")
-const z = require("zod")
+const { z } = require("zod")
 const asyncWrapper = require("../middlewares/asyncWarpper")
+
+// creating a scheme for the Post Validation
+
+const ITEMS_PER_PAGE = 10
+
+const studentFormScheme = z.object({
+  Name: z.string().min(1, { message: "Name is too short" }),
+  Course: z.string(),
+  Duration: z.string()
+})
 
 const getStudentData = asyncWrapper(async (req, res) => {
   const data = await getDataRequest()
@@ -8,6 +18,33 @@ const getStudentData = asyncWrapper(async (req, res) => {
     (x) => x.Name && x.Course && x.Duration !== ""
   )
   res.status(200).send(filterEmptyData)
+})
+const getStudentDataPaginate = asyncWrapper(async (req, res) => {
+  const page = parseInt(req.query.page) || 1
+  const perPage = parseInt(req.query.perPage) || ITEMS_PER_PAGE
+  const searchQuery = req.query.q || ""
+  const data = await getDataRequest()
+  const filterEmptyData = data.filter(
+    (x) => x.Name && x.Course && x.Duration !== ""
+  )
+  let filteredData = filterEmptyData
+  if (searchQuery) {
+    // Perform search based on the query
+    filteredData = filterEmptyData.filter((item) =>
+      item.Name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  }
+  const startIndex = (page - 1) * perPage
+  const endIndex = startIndex + perPage
+  const paginatedData = filteredData.slice(startIndex, endIndex)
+
+  res.status(200).json({
+    page,
+    perPage,
+    totalItems: filteredData.length,
+    totalPages: Math.ceil(filteredData.length / perPage),
+    data: paginatedData
+  })
 })
 
 const getStudentDataById = asyncWrapper(async (req, res) => {
@@ -93,5 +130,6 @@ module.exports = {
   postStudentData,
   updateStudentData,
   deleteStudent,
-  getStudentDataById
+  getStudentDataById,
+  getStudentDataPaginate
 }

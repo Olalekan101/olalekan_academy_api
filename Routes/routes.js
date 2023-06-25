@@ -1,20 +1,22 @@
-const express = require("express");
+const express = require("express")
 const {
   getStudentData,
   postStudentData,
   updateStudentData,
   deleteStudent,
   getStudentDataById,
-} = require("../Funtions/functions");
-const routes = express.Router();
+  getStudentDataPaginate
+} = require("../Funtions/functions")
+const routes = express.Router()
 // routes.use(logger);
 
-routes.route("/").get(getStudentData).post(postStudentData);
+routes.route("/query").get(getStudentDataPaginate)
+routes.route("/").get(getStudentData).post(postStudentData)
 routes
   .route("/:id")
   .patch(updateStudentData)
   .delete(deleteStudent)
-  .get(getStudentDataById);
+  .get(getStudentDataById)
 
 // function logger(req, res, next) {
 //   const id = req.params.id;
@@ -22,4 +24,4 @@ routes
 //   next();
 // }
 
-module.exports = routes;
+module.exports = routes
